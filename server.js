@@ -3,7 +3,6 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------|
 require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
 const crypto = require('crypto');
 const session = require('express-session');
