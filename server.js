@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const session = require('express-session');
 const Database = require('better-sqlite3');
 
-const { getAccessToken,fetchChannelData } = require('./auth');
 const app = express();
 
 //-------------------------------------------------------------------------------------------------------------------------------------------|
@@ -45,7 +44,8 @@ try {
   expires INTEGER,
 	createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
 	scope TEXT,
-  type TEXT
+  type TEXT,
+	updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
 );`).run();
 console.log('Database initialized successfully');
 } catch (err) {
@@ -54,10 +54,10 @@ console.log('Database initialized successfully');
 }
 
 const tokenRepository = {
-  save: (id,slug,accessToken, refreshToken, expires, scope, type) => {
+  save: (id, slug, accessToken, refreshToken, expires, scope, type) => {
     const stmt = db.prepare(`
-      INSERT INTO Tokens (id,slug,accessToken,refreshToken,expires,scope,type) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO Tokens (id, slug, accessToken, refreshToken, expires, scope, type, createdAt, updatedAt) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         slug = excluded.slug,
         accessToken = excluded.accessToken,
@@ -65,9 +65,9 @@ const tokenRepository = {
         expires = excluded.expires,
         scope = excluded.scope,
         type = excluded.type,
-        createdAt = CURRENT_TIMESTAMP
+        updatedAt = CURRENT_TIMESTAMP
     `);
-    return stmt.run(id,slug,accessToken, refreshToken, expires, scope, type);
+    return stmt.run(id, slug, accessToken, refreshToken, expires, scope, type);
   }
 };
 
@@ -101,7 +101,7 @@ app.get('/auth/kick', (req, res) => {
 		scope: SCOPES.join(" "),
 		state,
 		code_challenge: codeChallenge,
-		code_challenge_method: "S256",
+		code_challenge_method: "S256",  
 	});
   res.redirect(`${ENDPOINT.authURL}?${authParams.toString()}`);
 
